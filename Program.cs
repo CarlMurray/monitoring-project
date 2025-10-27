@@ -1,11 +1,22 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
+
+var client = new HttpClient();
 
 while (true)
 {
     string log = GenerateLog();
     Console.WriteLine(log);
-    Thread.Sleep(2000);
-    // TODO: Add logic to send data to Ingestion API
+    var content = new StringContent(log, Encoding.UTF8, "application/json");
+    try
+    {
+        await client.PostAsync("http://localhost:5247/logs", content);
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("There was an error with the post request: ");
+        Console.WriteLine(e);
+    }
 }
 
 string[] GetRawTopCommandOutput()
@@ -27,15 +38,16 @@ string GetTimestamp(string[] output)
     string[] timeAndDate = timestampLine.Split(" ");
     var date = DateOnly.Parse(timeAndDate[0]);
     var time = TimeOnly.Parse(timeAndDate[1]);
-    var datetime = new DateTime(date, time, DateTimeKind.Utc).ToString();
+    var datetime = new DateTime(date, time).ToString("u");
     return datetime;
 }
 
 string GetCpuUtilisation(string[] output)
 {
     string cpuUsageLine = output[4];
-    string cpuUsage = cpuUsageLine.Split(",")[2].Replace(" idle", "");
-    return cpuUsage;
+    string cpuUsageIdle = cpuUsageLine.Split(",")[2].Replace(" idle", "").Trim().Replace("%", "");
+    double cpuUsage = Math.Round(100 - Convert.ToDouble(cpuUsageIdle), 2);
+    return cpuUsage.ToString();
 }
 
 string GenerateLog()
