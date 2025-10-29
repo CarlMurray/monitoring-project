@@ -1,0 +1,36 @@
+services:
+  kafka:
+    extends:
+      service: kafka
+      file: Kafka/compose.yaml
+  ingestion_api:
+    build:
+      context: ingestion_api
+    depends_on:
+      - kafka
+    environment:
+      - ASPNETCORE_HTTP_PORTS=${ASPNETCORE_HTTP_PORTS}
+      - KAFKA_HOST=${KAFKA_HOST}
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - CH_HOST=${CH_HOST}
+      - CH_PASSWORD=${CH_PASSWOmonoRD}
+    ports:
+      - 8081:8081
+  policy_engine:
+    build:
+      context: ../src/PolicyEngine
+    environment:
+      - KAFKA_HOST=${KAFKA_HOST}
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - CH_HOST=${CH_HOST}
+      - CH_PASSWORD=${CH_PASSWORD}
+  data_storage_worker:
+    build:
+      context: ../src/DataStorageService
+    environment:
+      - KAFKA_HOST=${KAFKA_HOST}
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - CH_HOST=${CH_HOST}
+      - CH_PASSWORD=${CH_PASSWORD}
+    depends_on:
+      - kafka

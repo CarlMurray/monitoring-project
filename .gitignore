@@ -6,7 +6,8 @@
 ## has more thorough IDE-specific entries.
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
-
+.env
+.vscode
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -52,5 +53,4 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
-
-.vscode
+.env
