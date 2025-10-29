@@ -20,8 +20,8 @@ while (true)
 
 ClickHouseConnection InitialiseDatabase()
 {
-    var host = configuration["host"];
-    var password = configuration["password"];
+    var host = Environment.GetEnvironmentVariable("CH_HOST");
+    var password = Environment.GetEnvironmentVariable("CH_PASSWORD");
     var connectionString = $"Host={host};Port=8443;Protocol=https;Database=default;Username=default;Password={password}";
     var connection = new ClickHouseConnection(connectionString);
     connection.Open();
