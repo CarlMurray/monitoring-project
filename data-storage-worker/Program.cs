@@ -4,9 +4,6 @@ using ClickHouse.Driver.Utility;
 using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
 
-ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-IConfiguration configuration = configurationBuilder.AddUserSecrets<Program>().Build();
-
 var consumer = InitialiseKafkaConsumer();
 var connection = InitialiseDatabase();
 
@@ -27,9 +24,9 @@ while (true)
 
 ClickHouseConnection InitialiseDatabase()
 {
-    var host = configuration["clickHouseHost"];
-    var password = configuration["clickHousePassword"];
-    var connectionString = $"Host={host};Port=8443;Protocol=https;Database=default;Username=default;Password={password}";
+    var clickhouseHost = Environment.GetEnvironmentVariable("CH_HOST");
+    var clickhousePassword = Environment.GetEnvironmentVariable("CH_PASSWORD");
+    var connectionString = $"Host={clickhouseHost};Port=8443;Protocol=https;Database=default;Username=default;Password={clickhousePassword}";
     var connection = new ClickHouseConnection(connectionString);
     connection.Open();
     using (var command = connection.CreateCommand())
@@ -48,13 +45,13 @@ IConsumer<Ignore, string> InitialiseKafkaConsumer()
 {
     var config = new ConsumerConfig
     {
-        BootstrapServers = "localhost:9092",
+        BootstrapServers = $"{Environment.GetEnvironmentVariable("KAFKA_HOST")}:9092",
         GroupId = "1",
     };
 
     var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
 
-    consumer.Subscribe(["test-topic"]);
+    consumer.Subscribe([$"{Environment.GetEnvironmentVariable("KAFKA_TOPIC")}"]);
     return consumer;
 }
 
