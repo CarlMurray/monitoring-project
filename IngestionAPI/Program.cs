@@ -18,7 +18,7 @@ app.UseHttpsRedirection();
 
 var config = new ProducerConfig
 {
-    BootstrapServers = "localhost:9092"
+    BootstrapServers = $"{Environment.GetEnvironmentVariable("KAFKA_HOST")}:9092"
 };
 
 var producer = new ProducerBuilder<Null, string>(config).Build();
@@ -27,7 +27,7 @@ app.MapPost("/logs", (RawLog rawLog) =>
     var log = new RawLog(rawLog.Timestamp, rawLog.CpuUtilisation);
 
 
-    var result = producer.ProduceAsync("test-topic", new Message<Null, string> { Value = JsonSerializer.Serialize(log) });
+    var result = producer.ProduceAsync(Environment.GetEnvironmentVariable("KAFKA_TOPIC"), new Message<Null, string> { Value = JsonSerializer.Serialize(log) });
 
 }).WithOpenApi();
 
