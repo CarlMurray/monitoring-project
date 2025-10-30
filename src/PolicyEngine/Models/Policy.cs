@@ -33,13 +33,15 @@ public class Policy
         Console.WriteLine($"ALERT: Policy has triggered.\nLog ID: {CurrentLog.Id}\nMetric: {CurrentLog.CpuUtilisation}\nThreshold: {Threshold}\nTimestamp: {CurrentLog.Timestamp}");
     }
 
-    public void Execute(Log log)
+    public bool Execute(Log log)
     {
         CurrentLog = log;
         if (this.Evaluate(log))
         {
             CreateAlert();
+            return true;
         }
+        return false;
     }
 }
 

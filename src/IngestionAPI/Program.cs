@@ -27,7 +27,7 @@ app.MapPost("/logs", (RawLog rawLog) =>
     var log = new RawLog(rawLog.Timestamp, rawLog.CpuUtilisation);
 
 
-    var result = producer.ProduceAsync(Environment.GetEnvironmentVariable("KAFKA_TOPIC"), new Message<Null, string> { Value = JsonSerializer.Serialize(log) });
+    var result = producer.ProduceAsync(Environment.GetEnvironmentVariable("KAFKA_TOPIC_LOGS"), new Message<Null, string> { Value = JsonSerializer.Serialize(log) });
 
 }).WithOpenApi();
 

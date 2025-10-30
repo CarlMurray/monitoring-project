@@ -10,7 +10,7 @@ while (true)
     var content = new StringContent(log, Encoding.UTF8, "application/json");
     try
     {
-        await client.PostAsync("http://localhost:5247/logs", content);
+        await client.PostAsync("http://localhost:8081/logs", content);
     }
     catch (Exception e)
     {

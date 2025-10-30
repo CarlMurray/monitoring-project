@@ -2,7 +2,7 @@
 using ClickHouse.Driver.Utility;
 using Microsoft.Extensions.Configuration;
 using Models;
-
+using Confluent.Kafka;
 
 ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 IConfiguration configuration = configurationBuilder.AddUserSecrets<Program>().Build();
@@ -50,22 +50,28 @@ public class PolicyExecutor
         Policy = policy;
     }
 
-    public void AnalyseResults()
+    public bool AnalyseResults()
     {
         foreach (var result in Results)
         {
-            Policy.Execute(result);
+            bool evaluation = Policy.Execute(result);
             LastAnalysedLogId = result.Id;
+            if (evaluation)
+            {
+                PublishTriggerEvent(result);
+            }
         }
+        return false;
     }
 
     public void FetchResults(ClickHouseConnection connection)
     {
+        Results.Clear();
         using (var command = connection.CreateCommand())
         {
             if (String.IsNullOrEmpty(LastAnalysedLogId))
             {
-                command.CommandText = "SELECT * FROM cooked_metrics.metrics LIMIT 5";
+                command.CommandText = "SELECT * FROM cooked_metrics.metrics";
             }
             else
             {
@@ -80,5 +86,19 @@ public class PolicyExecutor
             }
 
         }
+    }
+    public void PublishTriggerEvent(Log triggeringLog)
+    {
+        var message = new { message = "ALERT CREATED", policy = Policy.Name, logTimestamp = triggeringLog.Timestamp, metric = triggeringLog.CpuUtilisation };
+        var config = new ProducerConfig
+        {
+            BootstrapServers = $"{Environment.GetEnvironmentVariable("KAFKA_HOST")}:9092",
+        };
+
+        using (var producer = new ProducerBuilder<Null, string>(config).Build())
+        {
+            producer.Produce(Environment.GetEnvironmentVariable("KAFKA_TOPIC_ALERTS"), new Message<Null, string> { Value = message.ToString() });
+        }
+
     }
 }

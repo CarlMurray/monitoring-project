@@ -2,7 +2,6 @@
 using ClickHouse.Driver.ADO;
 using ClickHouse.Driver.Utility;
 using Confluent.Kafka;
-using Microsoft.Extensions.Configuration;
 
 var consumer = InitialiseKafkaConsumer();
 var connection = InitialiseDatabase();
@@ -51,7 +50,7 @@ IConsumer<Ignore, string> InitialiseKafkaConsumer()
 
     var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
 
-    consumer.Subscribe([$"{Environment.GetEnvironmentVariable("KAFKA_TOPIC")}"]);
+    consumer.Subscribe([$"{Environment.GetEnvironmentVariable("KAFKA_TOPIC_LOGS")}"]);
     return consumer;
 }
 
