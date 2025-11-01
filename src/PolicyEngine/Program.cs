@@ -1,22 +1,11 @@
 ﻿using ClickHouse.Driver.ADO;
-using ClickHouse.Driver.Utility;
 using Microsoft.Extensions.Configuration;
-using Models;
-using Confluent.Kafka;
+using Models.Policies;
 
 ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 IConfiguration configuration = configurationBuilder.AddUserSecrets<Program>().Build();
 var connection = InitialiseDatabase();
-var policy = new Policy("Check CPU utilisation", "CpuUtilisation", 15, ">");
-Console.WriteLine($"Policy created: {policy.Name}");
-var policyExecutor = new PolicyExecutor(null, new List<Log>(), policy);
-
-while (true)
-{
-    policyExecutor.FetchResults(connection);
-    policyExecutor.AnalyseResults();
-    Thread.Sleep(2000);
-}
+PolicyEngine policyEngine = new(connection);
 
 ClickHouseConnection InitialiseDatabase()
 {
@@ -35,70 +24,4 @@ ClickHouseConnection InitialiseDatabase()
         command.ExecuteNonQuery();
     }
     return connection;
-}
-
-public class PolicyExecutor
-{
-    public string? LastAnalysedLogId { get; set; } = null;
-    public Policy Policy { get; set; }
-    public List<Log> Results { get; set; } = [];
-
-    public PolicyExecutor(string? lastAnalysedLogId, List<Log> results, Policy policy)
-    {
-        LastAnalysedLogId = lastAnalysedLogId;
-        Results = results;
-        Policy = policy;
-    }
-
-    public bool AnalyseResults()
-    {
-        foreach (var result in Results)
-        {
-            bool evaluation = Policy.Execute(result);
-            LastAnalysedLogId = result.Id;
-            if (evaluation)
-            {
-                PublishTriggerEvent(result);
-            }
-        }
-        return false;
-    }
-
-    public void FetchResults(ClickHouseConnection connection)
-    {
-        Results.Clear();
-        using (var command = connection.CreateCommand())
-        {
-            if (String.IsNullOrEmpty(LastAnalysedLogId))
-            {
-                command.CommandText = "SELECT * FROM cooked_metrics.metrics";
-            }
-            else
-            {
-                command.AddParameter("last_analysed_log", LastAnalysedLogId);
-                command.CommandText = "SELECT * FROM cooked_metrics.metrics WHERE id != {last_analysed_log:String} AND Timestamp >= (SELECT Timestamp from cooked_metrics.metrics WHERE id = {last_analysed_log:String})";
-            }
-            var reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                Log log = new Log(reader.GetValue(0).ToString(), reader.GetDateTime(2).ToString(), reader.GetValue(1).ToString());
-                Results.Add(log);
-            }
-
-        }
-    }
-    public void PublishTriggerEvent(Log triggeringLog)
-    {
-        var message = new { message = "ALERT CREATED", policy = Policy.Name, logTimestamp = triggeringLog.Timestamp, metric = triggeringLog.CpuUtilisation };
-        var config = new ProducerConfig
-        {
-            BootstrapServers = $"{Environment.GetEnvironmentVariable("KAFKA_HOST")}:9092",
-        };
-
-        using (var producer = new ProducerBuilder<Null, string>(config).Build())
-        {
-            producer.Produce(Environment.GetEnvironmentVariable("KAFKA_TOPIC_ALERTS"), new Message<Null, string> { Value = message.ToString() });
-        }
-
-    }
 }
