@@ -25,22 +25,41 @@ classDiagram
     MacOsAgentDataParser --|> IDataParser
     MacOsAgentDataParser ..> MacOSMetricDataPoint
     IDataParser ..> ITelemetryDataPoint
+    Policy <..> PolicyEvaluationResult
+    PolicyEvaluationResult ..> ITelemetryDataPoint
 
     %% NOTES
     note for MacOSMetricDataPoint "Concrete class implements\nlog parsing & normalisation logic."
 
-
-    class Policy{
-        +Name : string
-        +Description : string
-        +Conditions : Condition[]
-        +Actions : IAction[]
-        +CreatedBy : User
-        +CreatedAt : DateTime
-        +Evaluate(dataPoint : ITelemetryDataPoint) bool
+    namespace Policies{
+        class Policy{
+            +Id: guid
+            +Name : string
+            +Description : string
+            +Conditions : Condition[]
+            +Actions : IAction[]
+            +CreatedBy : User
+            +CreatedAt : DateTime
+            +Evaluate(dataPoint : ITelemetryDataPoint) PolicyEvaluationResult
+        }
+        class PolicyEvaluationResult{
+            +Id : guid
+            +Value : bool
+            +PolicyId : string
+            +DataPoint : ITelemetryDataPoint
+        }
+        class PolicyEngine{
+            +Policies : List~Policy~
+            +DataToAnalyse : List~ITelemetryDataPoint~
+            +LastDataPointAnalysedId : string
+            +FetchDataToAnalyse() : void
+            +ExecutePolicy(policy : Policy, dataPoint : ITelemetryDataPoint) bool
+            +ClearDataToAnalyse() : void
+        }
     }
     class IAction{
         <<Interface>>
+        +Id : guid
         +Name : string
         +Description : string
         +Trigger() void
@@ -52,7 +71,7 @@ classDiagram
         }
         class ITelemetryDataPoint{
             <<Interface>>
-            +Id : string
+            +Id : guid
             +Timestamp : DateTime
             +Message : MessageField~T~[]
             +Source : string
@@ -65,7 +84,7 @@ classDiagram
             +Value : T
         }
         class MetricDataPoint{
-            +Id : string
+            +Id : guid
             +Timestamp : DateTime
             +Message : IMessageField~double~[]
             +Source : string
@@ -73,7 +92,7 @@ classDiagram
             +ITelemetryDataPoint(rawDataPoint : IRawDataPoint)
         }
         class LogDataPoint{
-            +Id : string
+            +Id : guid
             +Timestamp : DateTime
             +Message : IMessageField~string~[]
             +Source : string
@@ -81,21 +100,13 @@ classDiagram
             +ITelemetryDataPoint(rawDataPoint : IRawDataPoint)
         }
         class MacOSMetricDataPoint{
-            +Id : string
+            +Id : guid
             +Timestamp : DateTime
             +Message : IMessageField~double~[]
             +Source : string
             +MacOSMetricDataPoint(rawDataPoint : IRawDataPoint)
             +ParseRawDataPoint(rawDataPoint : RawDataPoint)$ MacOSMetricDataPoint
         }
-    }
-    class PolicyEngine{
-        +Policies : List~Policy~
-        +DataToAnalyse : List~ITelemetryDataPoint~
-        +LastDataPointAnalysedId : string
-        +FetchDataToAnalyse() : void
-        +ExecutePolicy(policy : Policy, dataPoint : ITelemetryDataPoint) bool
-        +ClearDataToAnalyse() : void
     }
     namespace DataParsers{
         class IDataParser{
