@@ -13,7 +13,8 @@ services:
       - command: /bin/sh -c "/opt/kafka/bin/kafka-topics.sh --create --topic $KAFKA_TOPIC_ALERTS --bootstrap-server localhost:9092"
   ingestion_api:
     build:
-      context: ../src/IngestionAPI
+      context: ../
+      dockerfile: ./src/IngestionAPI/Dockerfile
     depends_on:
       - kafka
     env_file:
@@ -22,12 +23,14 @@ services:
       - 8081:8081
   policy_engine:
     build:
-      context: ../src/PolicyEngine
+      context: ../
+      dockerfile: ./src/PolicyEngine/Dockerfile
     env_file:
       - .env
   data_storage_worker:
     build:
-      context: ../src/DataStorageService
+      context: ../
+      dockerfile: ../src/DataStorageService/Dockerfile
     env_file:
       - .env
     depends_on:
@@ -35,7 +38,8 @@ services:
         condition: service_healthy
   actions_engine:
     build:
-      context: ../src/ActionsEngine
+      context: ../
+      dockerfile: ../src/ActionsEngine/Dockerfile
     env_file:
       - .env
     depends_on:
