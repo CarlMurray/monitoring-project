@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{4B91D2
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "src\common\Models\Models.csproj", "{5647DAA1-C931-41B6-9500-D192E812D09D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "agent_linux", "src\Agents\Agent_Linux\agent_linux.csproj", "{5B6B23FC-FD76-436E-8346-2A208282EC61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{5647DAA1-C931-41B6-9500-D192E812D09D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5647DAA1-C931-41B6-9500-D192E812D09D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5647DAA1-C931-41B6-9500-D192E812D09D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B6B23FC-FD76-436E-8346-2A208282EC61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B6B23FC-FD76-436E-8346-2A208282EC61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B6B23FC-FD76-436E-8346-2A208282EC61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B6B23FC-FD76-436E-8346-2A208282EC61}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,5 +70,6 @@ Global
 		{5B491F16-82C2-4076-A422-2BE3D7C80918} = {0927D6E3-9833-42E8-985B-01A0E9D9FF24}
 		{4B91D259-9D2B-4922-A7A6-8DC48591E38F} = {0927D6E3-9833-42E8-985B-01A0E9D9FF24}
 		{5647DAA1-C931-41B6-9500-D192E812D09D} = {4B91D259-9D2B-4922-A7A6-8DC48591E38F}
+		{5B6B23FC-FD76-436E-8346-2A208282EC61} = {19584263-2242-4C25-8913-19704C68DAC2}
 	EndGlobalSection
 EndGlobal
