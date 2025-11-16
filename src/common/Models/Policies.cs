@@ -44,7 +44,7 @@ public class Policy
         Id = Guid.Parse(id);
     }
 
-    public PolicyEvaluationResult Evaluate(INormalisedDataPoint dataPoint)
+    public PolicyEvaluationResult Evaluate(MetricDataPoint dataPoint)
     {
         bool isConditionSetMatched = false;
         List<Condition>? conditionsMatched = new();
@@ -85,7 +85,7 @@ public class PolicyEngine
         Task result = FetchPolicies();
     }
 
-    public void ExecutePolicy(Policy policy, INormalisedDataPoint dataPoint)
+    public void ExecutePolicy(Policy policy, MetricDataPoint dataPoint)
     {
 
         if (policy.Evaluate(dataPoint).State)
@@ -205,7 +205,7 @@ public class Condition
         TimeWindow = timeWindow;
     }
 
-    public bool Evaluate(INormalisedDataPoint dataPoint)
+    public bool Evaluate(MetricDataPoint dataPoint)
     {
         // TODO
         // Refactor to work with various DataPoint types
@@ -214,19 +214,19 @@ public class Condition
         switch (_operation)
         {
             case "=":
-                result = dataPoint.Value == Threshold;
+                result = Convert.ToDouble(dataPoint.Value) == Threshold;
                 break;
             case ">":
-                result = dataPoint.Value > Threshold;
+                result = Convert.ToDouble(dataPoint.Value) > Threshold;
                 break;
             case ">=":
-                result = dataPoint.Value >= Threshold;
+                result = Convert.ToDouble(dataPoint.Value) >= Threshold;
                 break;
             case "<=":
-                result = dataPoint.Value <= Threshold;
+                result = Convert.ToDouble(dataPoint.Value) <= Threshold;
                 break;
             case "<":
-                result = dataPoint.Value < Threshold;
+                result = Convert.ToDouble(dataPoint.Value) < Threshold;
                 break;
             default:
                 return false;
