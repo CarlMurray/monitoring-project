@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.ComponentModel;
 using System.Text.Json.Nodes;
 using System.Collections;
+using System.Security.Cryptography;
 
 public class Policy
 {
@@ -79,7 +80,7 @@ public class PolicyEngine
     {
         _db = db;
         _db.ConnectionString = String.IsNullOrEmpty(_db.ConnectionString)
-            ? $"Host={Environment.GetEnvironmentVariable("CH_HOST")};Port=8443;Protocol=https;Database=cooked_metrics;Username=default;Password={Environment.GetEnvironmentVariable("CH_PASSWORD")}"
+            ? $"Host={Environment.GetEnvironmentVariable("CLICKHOUSE_HOST")};Port={Environment.GetEnvironmentVariable("CLICKHOUSE_PORT")};Protocol=http;Database={Environment.GetEnvironmentVariable("CLICKHOUSE_DB")};Username={Environment.GetEnvironmentVariable("CLICKHOUSE_USER")};Password={Environment.GetEnvironmentVariable("CLICKHOUSE_PASSWORD")}"
             : _db.ConnectionString;
         _db.Open();
         Task result = FetchPolicies();
@@ -98,12 +99,34 @@ public class PolicyEngine
 
     }
 
+    static public void CreateDummyPolicies(ClickHouseConnection _db)
+    {
+        _db.Open();
+        var command = _db.CreateCommand();
+        string json = """
+        {
+  "conditionSets": [
+    [
+      {
+        "input": "10",
+        "operation": ">",
+        "threshold": "5",
+        "timeWindow": "100"
+      }
+    ]
+  ]
+}
+""";
+        command.CommandText = $"INSERT INTO {_db.Database}.policies (id, state, name, description, conditions) VALUES ({Random.Shared.NextInt64()}, 'true', 'my-policy', 'no description', '{JsonSerializer.Serialize(JsonDocument.Parse(json))}')";
+        command.ExecuteNonQuery();
+    }
+
     public async Task FetchPolicies()
     {
         Policies.Clear();
         _db.Open();
         var command = _db.CreateCommand();
-        command.CommandText = "SELECT * FROM cooked_metrics.policies WHERE state = true";
+        command.CommandText = $"SELECT * FROM {_db.Database}.policies WHERE state = true";
         // command.CommandText = "SELECT * FROM cooked_metrics.policies WHERE enabled == true FORMAT JSONEachRow";
         var reader = command.ExecuteReader();
         while (reader.Read())

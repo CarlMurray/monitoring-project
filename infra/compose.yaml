@@ -11,6 +11,10 @@ services:
     post_start:
       - command: /bin/sh -c "/opt/kafka/bin/kafka-topics.sh --create --topic $KAFKA_TOPIC_LOGS --bootstrap-server localhost:9092"
       - command: /bin/sh -c "/opt/kafka/bin/kafka-topics.sh --create --topic $KAFKA_TOPIC_ALERTS --bootstrap-server localhost:9092"
+  clickhouse:
+    extends:
+      service: clickhouse
+      file: Clickhouse/compose.yaml
   ingestion_api:
     build:
       context: ../
@@ -30,7 +34,7 @@ services:
   data_storage_worker:
     build:
       context: ../
-      dockerfile: ../src/DataStorageService/Dockerfile
+      dockerfile: ./src/DataStorageService/Dockerfile
     env_file:
       - .env
     depends_on:
@@ -39,7 +43,7 @@ services:
   actions_engine:
     build:
       context: ../
-      dockerfile: ../src/ActionsEngine/Dockerfile
+      dockerfile: ./src/ActionsEngine/Dockerfile
     env_file:
       - .env
     depends_on:
