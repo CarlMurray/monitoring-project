@@ -118,3 +118,21 @@ classDiagram
         }
     }
 ```
+
+# Local Deployment
+
+- Deploy with Docker Compose
+- Set env vars in .env placed in the `infra` directory, example below:
+
+```
+CLICKHOUSE_HOST=clickhouse
+CLICKHOUSE_PORT=8123
+CLICKHOUSE_USER=clickouse
+CLICKHOUSE_PASSWORD=clickhouse
+CLICKHOUSE_DB=data_ingested
+CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+KAFKA_TOPIC_LOGS=logs
+KAFKA_TOPIC_ALERTS=alerts
+KAFKA_HOST=kafka
+ASPNETCORE_ENVIRONMENT=Development
+```
