@@ -13,8 +13,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
 
 var config = new ProducerConfig
 {
@@ -25,8 +28,6 @@ var producer = new ProducerBuilder<Null, string>(config).Build();
 app.MapPost("/logs", (RawLog rawLog) =>
 {
     var log = new RawLog(rawLog.Timestamp, rawLog.CpuUtilisation);
-
-
     var result = producer.ProduceAsync(Environment.GetEnvironmentVariable("KAFKA_TOPIC_LOGS"), new Message<Null, string> { Value = JsonSerializer.Serialize(log) });
 
 }).WithOpenApi();
