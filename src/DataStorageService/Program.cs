@@ -22,7 +22,7 @@ while (true)
         command.AddParameter("id", log.Id);
         command.AddParameter("CpuUtilisation", log.CpuUtilisation);
         command.AddParameter("Timestamp", log.Timestamp);
-        command.CommandText = $"INSERT INTO {clickhouseDatabase}.metrics (id, CpuUtilisation, Timestamp) VALUES ({id:String},{CpuUtilisation:String},(parseDateTimeBestEffort({Timestamp:String})))";
+        command.CommandText = $"INSERT INTO {clickhouseDatabase}.metrics (id, CpuUtilisation, Timestamp) VALUES ({{id:String}},{{CpuUtilisation:String}},(parseDateTimeBestEffort({{Timestamp:String}})))";
         command.ExecuteNonQuery();
     }
 }
@@ -34,8 +34,6 @@ ClickHouseConnection InitialiseDatabase()
     connection.Open();
     using (var command = connection.CreateCommand())
     {
-        // command.CommandText = "DROP DATABASE cooked_metrics";
-        // command.ExecuteNonQuery();
         command.CommandText = $"CREATE DATABASE IF NOT EXISTS {clickhouseDatabase}";
         command.ExecuteNonQuery();
         command.CommandText = $"CREATE TABLE IF NOT EXISTS {clickhouseDatabase}.metrics (id String, CpuUtilisation String, Timestamp DateTime) ENGINE = MergeTree PRIMARY KEY (Timestamp, CpuUtilisation)";
