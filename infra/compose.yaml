@@ -9,8 +9,8 @@ services:
       - KAFKA_TOPIC_LOGS=${KAFKA_TOPIC_LOGS}
       - KAFKA_TOPIC_ALERTS=${KAFKA_TOPIC_ALERTS}
     post_start:
-      - command: /bin/sh -c "/opt/kafka/bin/kafka-topics.sh --create --topic $KAFKA_TOPIC_LOGS --bootstrap-server localhost:9092"
-      - command: /bin/sh -c "/opt/kafka/bin/kafka-topics.sh --create --topic $KAFKA_TOPIC_ALERTS --bootstrap-server localhost:9092"
+      - command: /bin/sh -c "/opt/kafka/bin/kafka-topics.sh --create --topic $KAFKA_TOPIC_LOGS --if-not-exists --bootstrap-server localhost:9092"
+      - command: /bin/sh -c "/opt/kafka/bin/kafka-topics.sh --create --topic $KAFKA_TOPIC_ALERTS --if-not-exists --bootstrap-server localhost:9092"
   clickhouse:
     extends:
       service: clickhouse
@@ -31,6 +31,9 @@ services:
       dockerfile: ./src/PolicyEngine/Dockerfile
     env_file:
       - .env
+    depends_on:
+      data_storage_worker:
+        condition: service_started
   data_storage_worker:
     build:
       context: ../
@@ -40,6 +43,9 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      clickhouse:
+        required: true
+        condition: service_started
   actions_engine:
     build:
       context: ../
