@@ -3,6 +3,12 @@ using ClickHouse.Driver.ADO;
 using ClickHouse.Driver.Utility;
 using Confluent.Kafka;
 
+var clickhouseDatabase = Environment.GetEnvironmentVariable("CLICKHOUSE_DB");
+var clickhouseUser = Environment.GetEnvironmentVariable("CLICKHOUSE_USER");
+var clickhousePassword = Environment.GetEnvironmentVariable("CLICKHOUSE_PASSWORD");
+var clickhouseHost = Environment.GetEnvironmentVariable("CLICKHOUSE_HOST");
+var clickhousePort = Environment.GetEnvironmentVariable("CLICKHOUSE_PORT");
+
 var consumer = InitialiseKafkaConsumer();
 var connection = InitialiseDatabase();
 
@@ -16,25 +22,23 @@ while (true)
         command.AddParameter("id", log.Id);
         command.AddParameter("CpuUtilisation", log.CpuUtilisation);
         command.AddParameter("Timestamp", log.Timestamp);
-        command.CommandText = "INSERT INTO cooked_metrics.metrics (id, CpuUtilisation, Timestamp) VALUES ({id:String},{CpuUtilisation:String},(parseDateTimeBestEffort({Timestamp:String})))";
+        command.CommandText = $"INSERT INTO {clickhouseDatabase}.metrics (id, CpuUtilisation, Timestamp) VALUES ({id:String},{CpuUtilisation:String},(parseDateTimeBestEffort({Timestamp:String})))";
         command.ExecuteNonQuery();
     }
 }
 
 ClickHouseConnection InitialiseDatabase()
 {
-    var clickhouseHost = Environment.GetEnvironmentVariable("CH_HOST");
-    var clickhousePassword = Environment.GetEnvironmentVariable("CH_PASSWORD");
-    var connectionString = $"Host={clickhouseHost};Port=8443;Protocol=https;Database=default;Username=default;Password={clickhousePassword}";
+    var connectionString = $"Host={clickhouseHost};Port={clickhousePort};Protocol=http;Database={clickhouseDatabase};Username={clickhouseUser};Password={clickhousePassword}";
     var connection = new ClickHouseConnection(connectionString);
     connection.Open();
     using (var command = connection.CreateCommand())
     {
         // command.CommandText = "DROP DATABASE cooked_metrics";
         // command.ExecuteNonQuery();
-        command.CommandText = "CREATE DATABASE IF NOT EXISTS cooked_metrics";
+        command.CommandText = $"CREATE DATABASE IF NOT EXISTS {clickhouseDatabase}";
         command.ExecuteNonQuery();
-        command.CommandText = "CREATE TABLE IF NOT EXISTS cooked_metrics.metrics (id String, CpuUtilisation String, Timestamp DateTime) ENGINE = MergeTree PRIMARY KEY (Timestamp, CpuUtilisation)";
+        command.CommandText = $"CREATE TABLE IF NOT EXISTS {clickhouseDatabase}.metrics (id String, CpuUtilisation String, Timestamp DateTime) ENGINE = MergeTree PRIMARY KEY (Timestamp, CpuUtilisation)";
         command.ExecuteNonQuery();
     }
     return connection;
