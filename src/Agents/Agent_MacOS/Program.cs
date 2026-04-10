@@ -1,12 +1,16 @@
-﻿using System.Text;
+﻿using System.ComponentModel;
+using System.Text;
 using System.Text.Json;
 
 var client = new HttpClient();
 
+Queue queue = new Queue();
+queue.File.Close(); // ensure file is closed
 while (true)
 {
     string log = GenerateLog();
     Console.WriteLine(log);
+    queue.WriteToQueue(log);
     var content = new StringContent(log, Encoding.UTF8, "application/json");
     try
     {
@@ -16,6 +20,7 @@ while (true)
     {
         Console.WriteLine("There was an error with the post request: ");
         Console.WriteLine(e);
+        Console.WriteLine("Writing log to queue...");
     }
 }
 
@@ -55,6 +60,44 @@ string GenerateLog()
     var output = GetRawTopCommandOutput();
     string timestamp = GetTimestamp(output);
     string cpuUtilisation = GetCpuUtilisation(output);
-    var jsonLog = JsonSerializer.Serialize(new { timestamp = timestamp, cpuUtilisation = cpuUtilisation });
+    var log = new RawLog(timestamp, cpuUtilisation);
+    var jsonLog = JsonSerializer.Serialize<RawLog>(log);
     return jsonLog;
+}
+record RawLog(string Timestamp, string CpuUtilisation);
+
+public class Queue
+{
+    public FileStream File { get; }
+    public string Path { get; } = "/Users/carlmurray/Desktop/Cmonitor/queue.log";
+    public int MaxLines { get; } = 1000;
+    public int LineCount { get => CountLines(); }
+
+    public Queue()
+    {
+        Console.WriteLine("Creating log file...");
+        File = System.IO.File.Create(Path);
+    }
+
+    public void WriteToQueue(string log)
+    {
+        Console.WriteLine("Appending log to file...");
+        if (LineCount >= MaxLines)
+        {
+            var linesToWrite = System.IO.File.ReadAllLines(Path).Skip(1);
+            linesToWrite.Append(log);
+            System.IO.File.WriteAllLines(Path, linesToWrite);
+        }
+        else
+        {
+            System.IO.File.AppendAllLines(Path, new List<string>() { log });
+        }
+        Console.WriteLine("Text added to log file.");
+    }
+
+    public int CountLines()
+    {
+        var count = System.IO.File.ReadLines(Path).Count();
+        return count;
+    }
 }

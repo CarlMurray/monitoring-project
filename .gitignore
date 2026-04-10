@@ -54,3 +54,4 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 .env
+.DS_Store
